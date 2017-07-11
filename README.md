@@ -53,13 +53,25 @@ https://github.com/PlatformLSF/platform-python-lsf-api
 source and confirm that these work as expected with:
 
 ```
+#ensure you are doing this with the LSF environment variables already defined
 virtualenv <virtualenv_dir>
 source <virtualenv_dir>/bin/activate
 pip install -r requirements.txt
 ```
 
-Edit lsf_log_watch.py to reflect local lsb.acct location and AMQP server 
-connection details and credentials.
+Create an ~/.config/lsf_log_watch/config.json to reflect local lsb.acct location and AMQP server 
+connection details and credentials, e.g.
+
+```
+{
+
+    "lsb_acct_path": "/usr/local/lsf/work/farm3/logdir/lsb.acct",
+    "amqp_server": "amqp-srv1",
+    "amqp_user": "john",
+    "amqp_password": "itsasecretinit"
+    
+}
+```
 
 run ./lsf_log_watch.py &
 ```

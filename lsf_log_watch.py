@@ -2,27 +2,27 @@
 
 '''
 ################################################################################
-# Copyright (c) 2013, 2016 Genome Research Ltd. 
-# 
+# Copyright (c) 2013, 2016, 2017 Genome Research Ltd.
+#
 # Author: Peter Clapham <pc7@sanger.ac.uk>
-# 
-# This program is free software: you can redistribute it and/or modify it under 
-# the terms of the GNU Affero General Public License as published by the Free 
-# Software Foundation; either version 3 of the License, or (at your option) any 
-# later version. 
-# 
-# This program is distributed in the hope that it will be useful, but WITHOUT 
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-# FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more 
-# details. 
-# 
-# You should have received a copy of the GNU Affero General Public License 
-# along with this program. If not, see <http://www.gnu.org/licenses/>. 
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Affero General Public License as published by the Free
+# Software Foundation; either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
 
 This script is documented within the associated README.md.
-They are provided as a skeleton starting point for other 
+They are provided as a skeleton starting point for other
 projects.
 '''
 
@@ -32,8 +32,10 @@ import time
 import logging
 from pygtail import Pygtail
 from pythonlsf import lsf
+from os.path import expanduser
 
-def display(eventrec):
+
+def display(config, eventrec):
     '''
     collect event records
     '''
@@ -62,10 +64,10 @@ def display(eventrec):
     #execHosts are an array, we can get array number from
     #numExHosts and iterate through the set to create an
     #execHosts (hosts) per job
-    
+
     hosts = ""
     execHosts = eventrec.eventLog.jobFinishLog.execHosts
-    for i in range(0,numExHosts):
+    for i in range(0, numExHosts):
         hosts += lsf.stringArray_getitem(execHosts, i) + " "
 
     # Some exit codes are special. A quick lookup.
@@ -87,13 +89,13 @@ def display(eventrec):
 
     GMendTime = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(endTime))
 
-    mkmessage(idx, jobId, queue, avgMem, options, resReq, jStatus, \
+    mkmessage(config, idx, jobId, queue, avgMem, options, resReq, jStatus, \
 			  maxRMem, jobName, endTime, runTime, cpuTime, runLimit, \
 			  userName, exitInfo, termTime, startTime, exitStatus, \
 			  exceptMask, numProcessors, GMendTime, hosts)
 
 
-def mkmessage(idx, jobId, queue, avgMem, options, resReq, jStatus, \
+def mkmessage(config, idx, jobId, queue, avgMem, options, resReq, jStatus, \
 			  maxRMem, jobName, endTime, runTime, cpuTime, runLimit, \
 			  userName, exitInfo, termTime, startTime, exitStatus, \
 			  exceptMask, numProcessors, GMendTime, hosts):
@@ -122,17 +124,18 @@ def mkmessage(idx, jobId, queue, avgMem, options, resReq, jStatus, \
     if idx == 0:
         del(datadict["idx"])
 
-    send(datadict)
+    send(config, datadict)
 
-def send(datadict):
+
+def send(config, datadict):
     '''
     connect to rabbitmq and send jmessage
     '''
     logging.getLogger('pika').setLevel(logging.DEBUG)
 
     # Set correct connection details here
-    credentials = pika.credentials.PlainCredentials("user", "passwd")
-    parameters = pika.ConnectionParameters('amqp-srv-server',
+    credentials = pika.credentials.PlainCredentials(config['amqp_user'], config['amqp_password'])
+    parameters = pika.ConnectionParameters(config['amqp_server'],
                                             5672,
                                             '/',
                                             credentials)
@@ -146,15 +149,17 @@ def send(datadict):
                           body=json.dumps(datadict))
     connection.close()
 
+
 def bintrans(exitStatus):
     '''
     Why does lsf sometimes add bit shift to
-    it's exit codes ? Here's a tidy up to 
+    it's exit codes ? Here's a tidy up to
     rectify the problem
     '''
     binadjustexitStatus = bin(exitStatus).rstrip("0")
     exitreturn = int(binadjustexitStatus, 2)
     return exitreturn
+
 
 def whyexit(exitInfo):
     '''
@@ -162,52 +167,57 @@ def whyexit(exitInfo):
     These are the lookups provided by LSF
     '''
 
-    errs = {0: "job exited, reason unknown TERM_UNKNOWN",  
-            1: "job killed after preemption TERM_PREEMPT", 
+    errs = {0: "job exited, reason unknown TERM_UNKNOWN",
+            1: "job killed after preemption TERM_PREEMPT",
             2: "job killed after queue run window is closed TERM_WINDOW",
             3: "job killed after load exceeds threshold TERM_LOAD",
-            4: "job exited, reason unknown TERM_OTHER", 
+            4: "job exited, reason unknown TERM_OTHER",
             5: "job killed after reaching LSF run time limit TERM_RUNLIMIT",
-            6: "job killed after deadline expires TERM_DEADLINE", 
-            7: "job killed after reaching LSF process TERM_PROCESSLIMIT", 
-            8: "job killed by owner without time for cleanup TERM_FORCE_OWNER", 
-            9: "job killed by root or LSF administrator without time for cleanup TERM_FORCE_ADMIN", 
-            10: "job killed and requeued by owner TERM_REQUEUE_OWNER", 
-            11: "job killed and requeued by root or LSF administrator TERM_REQUEUE_ADMIN", 
-            12: "job killed after reaching LSF CPU usage limit TERM_CPULIMIT", 
-            13: "job killed after checkpointing TERM_CHKPNT", 
-            14: "job killed by owner TERM_OWNER", 
-            15: "job killed by root or an administrator TERM_ADMIN", 
-            16: "job killed after reaching LSF memory usage limit TERM_MEMLIMIT", 
-            17: "job killed by a signal external to lsf TERM_EXTERNAL_SIGNAL", 
-            18: "job terminated abnormally in RMS TERM_RMS", 
-            19: "job killed when LSF is not available TERM_ZOMBIE", 
-            20: "job killed after reaching LSF swap usage limit TERM_SWAP", 
-            21: "job killed after reaching LSF thread TERM_THREADLIMIT", 
-            22: "job terminated abnormally in SLURM TERM_SLURM", 
-            23: "job exited, reason unknown TERM_BUCKET_KILL", 
-            24: "job terminated after control PID died TERM_CTRL_PID", 
-            25: "Current working directory is not accessible or does not exist on the execution host TERM_CWD_NOTEXIST", 
+            6: "job killed after deadline expires TERM_DEADLINE",
+            7: "job killed after reaching LSF process TERM_PROCESSLIMIT",
+            8: "job killed by owner without time for cleanup TERM_FORCE_OWNER",
+            9: "job killed by root or LSF administrator without time for cleanup TERM_FORCE_ADMIN",
+            10: "job killed and requeued by owner TERM_REQUEUE_OWNER",
+            11: "job killed and requeued by root or LSF administrator TERM_REQUEUE_ADMIN",
+            12: "job killed after reaching LSF CPU usage limit TERM_CPULIMIT",
+            13: "job killed after checkpointing TERM_CHKPNT",
+            14: "job killed by owner TERM_OWNER",
+            15: "job killed by root or an administrator TERM_ADMIN",
+            16: "job killed after reaching LSF memory usage limit TERM_MEMLIMIT",
+            17: "job killed by a signal external to lsf TERM_EXTERNAL_SIGNAL",
+            18: "job terminated abnormally in RMS TERM_RMS",
+            19: "job killed when LSF is not available TERM_ZOMBIE",
+            20: "job killed after reaching LSF swap usage limit TERM_SWAP",
+            21: "job killed after reaching LSF thread TERM_THREADLIMIT",
+            22: "job terminated abnormally in SLURM TERM_SLURM",
+            23: "job exited, reason unknown TERM_BUCKET_KILL",
+            24: "job terminated after control PID died TERM_CTRL_PID",
+            25: "Current working directory is not accessible or does not exist on the execution host TERM_CWD_NOTEXIST",
             26: "hung job removed from the LSF system TERM_REMOVE_HUNG_JOB"}
 
     whyerror = errs[exitInfo]
     return whyerror
 
-def read_eventrec(path):
+
+def read_eventrec(config):
     '''
     read lsb.acct
     '''
     while True:
-        for line in Pygtail(path, offset_file="lsb.acct.pygtail", paranoid=True):
+        for line in Pygtail(config["lsb_acct_path"], offset_file="lsb.acct.pygtail", paranoid=True):
             log = lsf.eventRec()
             result = lsf.lsb_geteventrecbyline(line, log)
             if result != 0:
 		time.sleep(2)
                 break
-            display(log)
+            display(config, log)
 
         time.sleep(1)
-        
+
 if __name__ == '__main__':
-    # Set correct path to lsb.acct here
-    read_eventrec("/usr/local/lsf/work/<cluster_name>/logdir/lsb.acct")
+
+    home = expanduser("~")
+    with open(home + "/lsf_log_watch/config.json") as config_file:
+        config = json.load(config_file)
+
+    read_eventrec(config)
