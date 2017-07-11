@@ -42,7 +42,7 @@ Recommended run methodology
 Configure virtualenv
 --------------------
 
-```
+
 Install virtualenv within your local environment and add the required python
 lsf api, pika, etc modules to your virtualenv. NB pythonlsf requires lsf 
 headers and libraries to be available on the host for installation to succeed.
@@ -73,8 +73,8 @@ connection details and credentials, e.g.
 }
 ```
 
-run ./lsf_log_watch.py &
-```
+`run ./lsf_log_watch.py &`
+
 
 Example reader
 -----------------------

@@ -217,7 +217,7 @@ def read_eventrec(config):
 if __name__ == '__main__':
 
     home = expanduser("~")
-    with open(home + "/lsf_log_watch/config.json") as config_file:
+    with open(home + "/.config/lsf_log_watch/config.json") as config_file:
         config = json.load(config_file)
 
     read_eventrec(config)
