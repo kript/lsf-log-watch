@@ -52,7 +52,11 @@ https://github.com/PlatformLSF/platform-python-lsf-api
 
 source and confirm that these work as expected with:
 
+```
+virtualenv <virtualenv_dir>
 source <virtualenv_dir>/bin/activate
+pip install -r requirements.txt
+```
 
 Edit lsf_log_watch.py to reflect local lsb.acct location and AMQP server 
 connection details and credentials.
