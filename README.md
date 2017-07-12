@@ -1,7 +1,6 @@
 *THIS IS A WORK IN PROGESS*
 ===========================
 
-```
 IBM Platform LSF is a powerful workload management platform for demanding, 
 distributed HPC environments. It provides a comprehensive set of intelligent,
 policy-driven scheduling features that enable you to utilise all of your 
@@ -15,7 +14,7 @@ or cluster monitoring.
 This script should provide job data directly from the lsb.acct file. All 
 LSF status data is captured, along with job resource usage and requirements, 
 which are sent to an AMQP queue.
-```
+
 
 Setup
 =====
@@ -75,6 +74,7 @@ to lsb.streams and the IBM platform python api installed.
 
 `<virtualenv_dir>/bin/python ./lsf_log_watch.py &`
 
+A sample upstart init script is also provided, customisation is ledt to the reader..
 
 Example Reader
 --------------
