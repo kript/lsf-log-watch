@@ -1,0 +1,18 @@
+description "LSF AMQP log watch"
+author "Peter Clapham"
+
+start on filesystem or runlevel [2345] 
+stop on runlevel [06]
+
+respawn
+respawn limit 10 5
+
+pre-script
+  . /usr/local/lsf/conf/profile.lsf
+  . /<virtualenv_dir>/bin/activate
+end script
+
+script
+  cd platform-python-lsf-api/examples
+  <virtualenv_dir>/bin/python platform-python-lsf-api/examples/lsf_log_watch.py
+end script
