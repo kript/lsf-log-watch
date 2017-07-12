@@ -74,7 +74,7 @@ to lsb.streams and the IBM platform python api installed.
 
 `<virtualenv_dir>/bin/python ./lsf_log_watch.py &`
 
-A sample upstart init script is also provided, customisation is ledt to the reader..
+A sample upstart init script is also provided, customisation is left as an exercise to the reader..
 
 Example Reader
 --------------
