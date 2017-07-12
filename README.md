@@ -20,21 +20,13 @@ which are sent to an AMQP queue.
 Setup
 =====
 
-```
-The lsf_log_watch.py script requires a host running LSF 9.x with read access 
-to lsb.streams and the IBM platform python api installed. 
-
 A functioning Rabbit AMQP server with configured accounts and basic queue 
-in place. The AMQP setup is outside the scope here.
+in place. The AMQP setup is outside the scope here.  
+Please refer to www.rabbitmq.com for AMQP consumer example code.
 
 The platform python LSF api is available from here:
 https://github.com/PlatformLSF/platform-python-lsf-api
 
-Outside of basic modules the script also requires:
-
-pika
-pygtail
-```
 
 Recommended run methodology
 ==========================
@@ -44,10 +36,11 @@ Configure virtualenv
 
 
 Install virtualenv within your local environment and add the required python
-lsf api, pika, etc modules to your virtualenv. NB pythonlsf requires lsf 
-headers and libraries to be available on the host for installation to succeed.
+lsf api, pika, etc modules to your virtualenv (the included requirements.txt file does this for you. 
 
-python lsf documetnation can be found here:
+NB pythonlsf requires lsf headers and libraries to be available on the host for installation to succeed.
+
+python lsf documentation can be found here:
 https://github.com/PlatformLSF/platform-python-lsf-api
 
 source and confirm that these work as expected with:
@@ -73,13 +66,21 @@ connection details and credentials, e.g.
 }
 ```
 
-`run ./lsf_log_watch.py &`
+
+Server to push logs to RabbitMQ/AMQP server
+-------------------------------------------
+
+The lsf_log_watch.py script requires a host running LSF 9.x with read access 
+to lsb.streams and the IBM platform python api installed. 
+
+`<virtualenv_dir>/bin/python ./lsf_log_watch.py &`
 
 
-Example reader
------------------------
+Example Reader
+--------------
 
 ```
-Please refer to www.rabbitmq.com for AMQP consumer example code. Examples
-are provided for Python and Java.
+<virtualenv_dir>/bin/python ./reader_example.py
+ [x] Received '{"jobId": 2909824, "numProcessors": 1, "resReq": "select[mem>8000] rusage[mem=8000]", "avgMem": 1795341504, "GMendTime": "2017-07-11 08:36:49", "maxRMem": 31744, "job": "Success", "startTime": 1499762207, "jStatus": 64, "termTime": 0, "runTime": 2, "userName": "bob", "runLimit": -1, "idx": 34, "exitInfo": 0, "cpuTime": 0.9840610027313232, "jobName": "contam_screen_TMU[1-78]", "queue": "long", "endTime": 1499762209, "exitStatus": 0, "options": 33817107, "exceptMask": 4}' 1
+ ...
 ```
